@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Face Swap</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: #121212;
+      color: #fff;
+    }
+    input {
+      margin: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    img {
+      margin-top: 20px;
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>AI Face Swap Tool</h1>
+  <input type="file" id="source" accept="image/*" />
+  <input type="file" id="target" accept="image/*" />
+  <br />
+  <button onclick="swapFaces()">Swap Faces</button>
+  <div id="result"></div>
+
+  <script>
+    async function swapFaces() {
+      const source = document.getElementById("source").files[0];
+      const target = document.getElementById("target").files[0];
+      if (!source || !target) {
+        alert("Please select both source and target images.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("inputs", source);
+      formData.append("image", target);
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "Processing...";
+
+      try {
+        const response = await fetch("https://api-inference.huggingface.co/models/hysts/face_swap", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer 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"
+          },
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to swap faces");
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+
+        resultDiv.innerHTML = `
+          <img src="${url}" alt="Swapped Image"/><br/>
+          <a href="${url}" download="face_swapped.jpg">
+            <button>Download Image</button>
+          </a>
+        `;
+      } catch (error) {
+        resultDiv.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
